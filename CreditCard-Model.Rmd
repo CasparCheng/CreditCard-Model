@@ -1,0 +1,85 @@
+---
+title: "credit card"
+output: html_document
+---
+
+###Load data
+
+```{r}
+
+credit <- read.csv("~/OneDrive/EZ4/EZ Career/Bootcamp/creditcard.csv")
+head(credit)
+
+```
+
+
+
+###Data cleaning
+```{r}
+
+credit <- credit[,-c(1,2)]
+
+str(credit)
+
+credit$SEX <- factor(credit$SEX)
+credit$EDUCATION <- factor(credit$EDUCATION)
+credit$MARRIAGE <- factor(credit$MARRIAGE)
+
+credit$default.payment.next.month <- ifelse(credit$default.payment.next.month == 1, "YES", "NO")
+credit$default.payment.next.month <- factor(credit$default.payment.next.month)
+
+colnames(credit)[24] <- "default"
+```
+
+###Build a model
+
+```{r}
+
+library(caret)
+controlezc <- trainControl(method = "cv", number=10, summaryFunction = twoClassSummary, classProbs = TRUE, savePredictions = T)
+set.seed(1)
+model.1 <- train(default ~., data = credit, method = "rf", trControl = controlezc)
+
+
+model.1
+confusionMatrix(model.1)
+
+```
+
+###Feature eng
+
+
+```{r}
+
+head(credit)
+
+
+credit$gfs <- ifelse(credit$LIMIT_BAL > 400000 & credit$AGE < 35, 1, 0)
+sum(credit$gfs)
+
+
+
+#20000, 2, 19999
+
+credit$ratio1 <- (credit$BILL_AMT1 - credit$PAY_AMT1)/credit$LIMIT_BAL
+credit$ratio2 <- (credit$BILL_AMT2 - credit$PAY_AMT2)/credit$LIMIT_BAL
+credit$ratio3 <- (credit$BILL_AMT3 - credit$PAY_AMT3)/credit$LIMIT_BAL
+credit$ratio4 <- (credit$BILL_AMT4 - credit$PAY_AMT4)/credit$LIMIT_BAL
+credit$ratio5 <- (credit$BILL_AMT5 - credit$PAY_AMT5)/credit$LIMIT_BAL
+credit$ratio6 <- (credit$BILL_AMT6 - credit$PAY_AMT6)/credit$LIMIT_BAL
+
+
+```
+
+
+```{r}
+
+set.seed(1)
+model.2 <- train(default ~., data = credit, method = "rf", trControl = controlezc)
+
+model.2
+confusionMatrix(model.2)
+
+varImp(model.2)
+
+```
